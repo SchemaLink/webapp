@@ -38,6 +38,7 @@ import {
   Attribute,
   SchemaProperties,
   hardcodedOntologies,
+  CustomCardinality,
 } from '@neo4j-arrows/model';
 import { BoundingBox, calculateBoundingBox } from '@neo4j-arrows/graphics';
 import { lockHandleDragType } from './mouse';
@@ -546,12 +547,14 @@ export const setOntology = (
 
 export const setCardinality = (
   selection: EntitySelection,
-  cardinality: Cardinality
+  cardinality: Cardinality,
+  customCardinality?: CustomCardinality
 ) => ({
   category: 'GRAPH',
   type: 'SET_CARDINALITY',
   selection,
   cardinality,
+  customCardinality,
 });
 
 export const setSchemaProperties = (

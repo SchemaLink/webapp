@@ -27,6 +27,7 @@ import { Dispatch } from 'redux';
 import {
   Attribute,
   Cardinality,
+  CustomCardinality,
   Entity,
   EntitySelection,
   Ontology,
@@ -116,9 +117,10 @@ const mapDispatchToProps = (dispatch: Dispatch) => {
       onSaveOntology(selection, ontologies)(dispatch),
     onSaveCardinality: (
       selection: EntitySelection,
-      cardinality: Cardinality
+      cardinality: Cardinality,
+      customCardinality?: CustomCardinality
     ) => {
-      dispatch(setCardinality(selection, cardinality));
+      dispatch(setCardinality(selection, cardinality, customCardinality));
     },
     onSaveDescription: (selection: EntitySelection, description: string) => {
       dispatch(setDescription(selection, description));

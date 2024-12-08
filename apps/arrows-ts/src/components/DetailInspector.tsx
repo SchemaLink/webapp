@@ -30,6 +30,8 @@ import {
   Relationship,
   isRelationship,
   Attribute,
+  CustomCardinality,
+  RelationshipWithCustomCardinality,
 } from '@neo4j-arrows/model';
 import { renderCounters } from './EntityCounters';
 import PropertyTable from './PropertyTable';
@@ -51,7 +53,8 @@ interface DetailInspectorProps {
   onConvertCaptionsToPropertyValues: () => void;
   onSaveCardinality: (
     selection: EntitySelection,
-    cardinality: Cardinality
+    cardinality: Cardinality,
+    customCardinality?: CustomCardinality
   ) => void;
   onSaveRelationshipType: (
     selection: EntitySelection,
@@ -281,6 +284,70 @@ export default class DetailInspector extends Component<
             />
           </Form.Field>
         );
+
+        if (commonCardinality === Cardinality.CUSTOM && entities.length === 1) {
+          const {
+            customCardinality: {
+              subject_minimum,
+              subject_maximum,
+              object_minimum,
+              object_maximum,
+            },
+            // We know this because of the if statement above
+          } = entities[0] as RelationshipWithCustomCardinality;
+          fields.push(
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1em' }}>
+              <Form.Field key="_subject_minimum" style={{ width: '40%' }}>
+                <label>Subject minimum</label>
+                <Input
+                  type="number"
+                  value={subject_minimum}
+                  onChange={(event) =>
+                    onSaveCardinality(selection, Cardinality.CUSTOM, {
+                      subject_minimum: parseInt(event.target.value),
+                    })
+                  }
+                />
+              </Form.Field>
+              <Form.Field key="_subject_maximum" style={{ width: '40%' }}>
+                <label>Subject maximum</label>
+                <Input
+                  type="number"
+                  value={subject_maximum}
+                  onChange={(event) =>
+                    onSaveCardinality(selection, Cardinality.CUSTOM, {
+                      subject_maximum: parseInt(event.target.value),
+                    })
+                  }
+                />
+              </Form.Field>
+              <Form.Field key="_object_minimum" style={{ width: '40%' }}>
+                <label>Object minimum</label>
+                <Input
+                  type="number"
+                  value={object_minimum}
+                  onChange={(event) =>
+                    onSaveCardinality(selection, Cardinality.CUSTOM, {
+                      object_minimum: parseInt(event.target.value),
+                    })
+                  }
+                />
+              </Form.Field>
+              <Form.Field key="_object_maximum" style={{ width: '40%' }}>
+                <label>Object maximum</label>
+                <Input
+                  type="number"
+                  value={object_maximum}
+                  onChange={(event) =>
+                    onSaveCardinality(selection, Cardinality.CUSTOM, {
+                      object_maximum: parseInt(event.target.value),
+                    })
+                  }
+                />
+              </Form.Field>
+            </div>
+          );
+        }
       }
     }
 

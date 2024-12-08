@@ -1,8 +1,55 @@
-import { Relationship, Node } from '@neo4j-arrows/model';
+import { Relationship, Node, Cardinality } from '@neo4j-arrows/model';
 import { toAnnotators } from './ontologies';
 import { Attribute, LinkMLClass, SpiresCoreClasses } from './types';
 import { toClassName } from './naming';
 import { propertiesToAttributes } from './entities';
+
+enum RelationshipMember {
+  SUBJECT = 'subject',
+  OBJECT = 'object',
+}
+
+const toMinimumCardinality = (
+  relationship: Relationship,
+  relationshipMember: RelationshipMember
+): number => {
+  switch (relationship.cardinality) {
+    case Cardinality.CUSTOM:
+      switch (relationshipMember) {
+        case RelationshipMember.SUBJECT:
+          return relationship.customCardinality?.subject_minimum ?? 0;
+        case RelationshipMember.OBJECT:
+          return relationship.customCardinality?.object_minimum ?? 0;
+      }
+      break;
+    default:
+      return 0;
+  }
+};
+
+const toMaximumCardinality = (
+  relationship: Relationship,
+  relationshipMember: RelationshipMember
+): number | undefined => {
+  switch (relationship.cardinality) {
+    case Cardinality.CUSTOM:
+      switch (relationshipMember) {
+        case RelationshipMember.SUBJECT:
+          return relationship.customCardinality?.subject_maximum;
+        case RelationshipMember.OBJECT:
+          return relationship.customCardinality?.object_maximum;
+      }
+      break;
+    case Cardinality.ONE_TO_ONE:
+      return 1;
+    case Cardinality.ONE_TO_MANY:
+      return relationshipMember === RelationshipMember.SUBJECT ? 1 : undefined;
+    case Cardinality.MANY_TO_ONE:
+      return relationshipMember === RelationshipMember.OBJECT ? 1 : undefined;
+    default:
+      return undefined;
+  }
+};
 
 export const findRelationshipsFromNodeFactory = (
   relationship: Relationship[]
@@ -16,7 +63,10 @@ export const relationshipToRelationshipClass = (
   nodeIdToNode: (id: string) => Node | undefined,
   toRelationshipClassName: (relationship: Relationship) => string
 ): LinkMLClass => {
-  const nodeToTripleSlot = (node: Node | undefined): Attribute => {
+  const nodeToTripleSlot = (
+    node: Node | undefined,
+    relationshipMember: RelationshipMember
+  ): Attribute => {
     if (!node) {
       return {};
     }
@@ -25,6 +75,16 @@ export const relationshipToRelationshipClass = (
       range: toClassName(node.caption),
       annotations: {
         'prompt.examples': node.examples ? node.examples.join(', ') : '',
+      },
+      ...{
+        minimum_cardinality: toMinimumCardinality(
+          relationship,
+          relationshipMember
+        ),
+        maximum_cardinality: toMaximumCardinality(
+          relationship,
+          relationshipMember
+        ),
       },
     };
   };
@@ -40,8 +100,8 @@ export const relationshipToRelationshipClass = (
       toNode ? ` where the object is a ${toNode.caption}` : ''
     }${relationship.description ? `. ${relationship.description}` : ''}`,
     slot_usage: {
-      subject: nodeToTripleSlot(fromNode),
-      object: nodeToTripleSlot(toNode),
+      subject: nodeToTripleSlot(fromNode, RelationshipMember.SUBJECT),
+      object: nodeToTripleSlot(toNode, RelationshipMember.OBJECT),
       predicate: {
         range: `${toRelationshipClassName(relationship)}Predicate`,
         annotations: {

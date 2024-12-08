@@ -27,6 +27,7 @@ import {
   Guides,
   Attribute,
   SchemaProperties,
+  CustomCardinality,
 } from '@neo4j-arrows/model';
 import { Action } from 'redux';
 import undoable, { groupByActionTypes } from 'redux-undo';
@@ -65,6 +66,7 @@ interface SetExamplesAction extends SelectionAction<'SET_EXAMPLES'> {
 
 interface SetCardinalityAction extends SelectionAction<'SET_CARDINALITY'> {
   cardinality: Cardinality;
+  customCardinality?: CustomCardinality;
 }
 
 interface SetNodeCaptionAction extends SelectionAction<'SET_NODE_CAPTION'> {
@@ -375,6 +377,13 @@ const graph = (state: Graph = emptyGraph(), action: GraphAction) => {
             ? {
                 ...relationship,
                 cardinality: action.cardinality,
+                customCardinality:
+                  action.cardinality !== Cardinality.CUSTOM
+                    ? undefined
+                    : {
+                        ...relationship.customCardinality,
+                        ...action.customCardinality,
+                      },
               }
             : relationship
         ),

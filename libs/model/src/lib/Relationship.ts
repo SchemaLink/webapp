@@ -6,6 +6,7 @@ export enum Cardinality {
   MANY_TO_ONE = 'MANY_TO_ONE',
   ONE_TO_ONE = 'ONE_TO_ONE',
   MANY_TO_MANY = 'MANY_TO_MANY',
+  CUSTOM = 'CUSTOM',
 }
 
 export enum RelationshipType {
@@ -23,7 +24,16 @@ export function toVisualCardinality(cardinality: Cardinality): string {
       return 'N:N';
     case Cardinality.MANY_TO_ONE:
       return 'N:1';
+    case Cardinality.CUSTOM:
+      return 'Custom';
   }
+}
+
+export interface CustomCardinality {
+  subject_minimum?: number;
+  subject_maximum?: number;
+  object_minimum?: number;
+  object_maximum?: number;
 }
 
 export interface Relationship extends Entity {
@@ -34,6 +44,21 @@ export interface Relationship extends Entity {
   ontologies?: Ontology[];
   examples?: string[];
   cardinality?: Cardinality;
+  customCardinality?: CustomCardinality;
+}
+
+export interface RelationshipWithDefaultCardinality extends Relationship {
+  cardinality:
+    | Cardinality.MANY_TO_MANY
+    | Cardinality.MANY_TO_ONE
+    | Cardinality.ONE_TO_MANY
+    | Cardinality.ONE_TO_ONE;
+  customCardinality: undefined;
+}
+
+export interface RelationshipWithCustomCardinality extends Relationship {
+  cardinality: Cardinality.CUSTOM;
+  customCardinality: CustomCardinality;
 }
 
 export const setType = (relationship: Relationship, type: string) => {
